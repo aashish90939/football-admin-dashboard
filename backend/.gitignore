@@ -1,0 +1,15 @@
+# Common Python ignores
+__pycache__/
+*.py[cod]
+*.log
+*.env
+*.sqlite3
+
+# VSCode and OS files
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Node.js projects
+node_modules/
+dist/
