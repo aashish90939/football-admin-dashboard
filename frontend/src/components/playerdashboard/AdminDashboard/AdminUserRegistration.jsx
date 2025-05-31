@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-const AdminDashboard = () => {
+const AdminUserRegistration = () => {
   const [pendingUsers, setPendingUsers] = useState([]);
 
   const fetchPending = async () => {
@@ -76,4 +76,4 @@ const AdminDashboard = () => {
   );
 };
 
-export default AdminDashboard;
+export default AdminUserRegistration;

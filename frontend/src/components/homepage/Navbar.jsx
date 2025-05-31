@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 
 const navItems = [
@@ -7,14 +7,31 @@ const navItems = [
   { name: "About", to: "/about" },
   { name: "Team", to: "/team" },
   { name: "Gallery", to: "/gallery" },
+  { name: "Contact", to: "/contact" },
 ];
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
-    <header className="sticky top-0 z-50 backdrop-blur-md bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 text-white shadow-lg">
+    <header
+      className={`sticky top-0 z-50 transition-all duration-300 shadow-lg ${
+        isScrolled
+          ? "backdrop-blur-md bg-blue-800/10"
+          : "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800"
+      } text-white`}
+    >
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         {/* Logo + Name */}
         <Link to="/" className="flex items-center space-x-4">

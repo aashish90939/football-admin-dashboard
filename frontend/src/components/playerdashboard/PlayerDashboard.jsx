@@ -1,7 +1,5 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
 import { toast } from "react-toastify";
 import {
   FaUser,
@@ -13,25 +11,24 @@ import {
 } from "react-icons/fa";
 import { MdOutlineWhatsapp } from "react-icons/md";
 
-// Navbar & Footer (inline)
-const Navbar = () => (
-  <header className="w-full bg-white shadow p-4 flex justify-between items-center">
-    <h1 className="text-xl font-bold text-blue-700">Members Area</h1>
-    <span className="text-sm text-gray-600">Player Dashboard</span>
-  </header>
-);
+import LatestNews from "./NewsEventSection/LatestNews";
+import UpcomingEvents from "./NewsEventSection/UpcomingEvents";
 
-const Footer = () => (
-  <footer className="w-full bg-white shadow-inner text-center p-3 text-sm text-gray-500">
-    © {new Date().getFullYear()} Football Team Management. All rights reserved.
-  </footer>
-);
+// Importing useLocation to access the current route
+import { useLocation } from "react-router-dom";
 
 const PlayerDashboard = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [date, setDate] = useState(new Date());
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [showRightPanel, setShowRightPanel] = useState(true); // ✅ Replaced context with local state
   const navigate = useNavigate();
+
+  // Importing useLocation to access the current route
+  const location = useLocation();
+  const hideRightPanelRoutes = ["/dashboard/admin"]; // Define routes where the right panel should be hidden
+  const shouldHideRightPanel = hideRightPanelRoutes.some((path) =>
+    location.pathname.startsWith(path)
+  );
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -61,7 +58,7 @@ const PlayerDashboard = ({ children }) => {
     { to: "matches", label: "Match History", icon: <FaFutbol /> },
     { to: "trainings", label: "Training Schedule", icon: <FaDumbbell /> },
     { to: "attendance", label: "Attendance", icon: <FaCalendarAlt /> },
-    { to: "Squad", label: "Squad", icon: <FaFutbol /> },
+    { to: "squad", label: "Squad", icon: <FaUser /> },
   ];
 
   if (user?.role === "admin") {
@@ -72,12 +69,13 @@ const PlayerDashboard = ({ children }) => {
     });
   }
 
+  if (user === null) {
+    return <div className="p-10 text-center">Loading...</div>;
+  }
+
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Navbar */}
-      <Navbar />
-
-      {/* Mobile toggle */}
+      {/* Mobile sidebar toggle */}
       <div className="lg:hidden flex justify-between px-4 py-2 bg-white shadow z-50">
         <button
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -87,9 +85,7 @@ const PlayerDashboard = ({ children }) => {
         </button>
       </div>
 
-      {/* Main layout */}
       <div className="flex flex-1 bg-gradient-to-br from-gray-100 to-blue-50 overflow-hidden">
-        {/* Left Sidebar */}
         {isSidebarOpen && (
           <aside className="w-64 bg-white shadow-lg hidden lg:flex flex-col justify-between">
             <div>
@@ -119,7 +115,6 @@ const PlayerDashboard = ({ children }) => {
                 </ul>
               </nav>
 
-              {/* WhatsApp & Team Info */}
               <div className="mt-8 border-t pt-4 px-4 space-y-3">
                 <div>
                   <h4 className="text-sm font-semibold text-gray-500 mb-1">
@@ -144,29 +139,36 @@ const PlayerDashboard = ({ children }) => {
                 </div>
               </div>
             </div>
-
-            {/* Logout */}
-            <div className="px-4 py-4 border-t">
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-2 bg-red-500 text-white font-semibold py-2 rounded-lg hover:bg-red-600 transition"
-              >
-                <FaSignOutAlt /> Logout
-              </button>
-            </div>
           </aside>
         )}
 
-        {/* Main Content */}
-        <main className="flex-1 min-w-[500px] p-4 md:p-6 lg:p-10 overflow-y-auto">
-          <div className="w-full bg-white p-6 rounded-xl shadow-md min-h-[400px]">
-            {children || <Outlet />}
+        <main className="flex-1 flex gap-6 p-4 md:p-6 lg:p-10 overflow-y-auto">
+          <div
+            className={`flex-1 ${
+              showRightPanel ? "" : "w-full"
+            } transition-all`}
+          >
+            <div className="bg-white p-6 rounded-xl shadow-md min-h-[400px]">
+              {children || <Outlet />}
+            </div>
           </div>
+
+          {showRightPanel && !shouldHideRightPanel && (
+            <div className="w-[300px] hidden xl:block space-y-6">
+              <div className="px-4 py-4 border-t">
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center justify-center gap-2 bg-red-500 text-white font-semibold py-2 rounded-lg hover:bg-red-600 transition"
+                >
+                  <FaSignOutAlt /> Logout
+                </button>
+              </div>
+              <UpcomingEvents />
+              <LatestNews />
+            </div>
+          )}
         </main>
       </div>
-
-      {/* Footer */}
-      <Footer />
     </div>
   );
 };

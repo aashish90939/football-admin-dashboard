@@ -7,9 +7,17 @@ if (!JWT_SECRET) {
   throw new Error('Missing JWT_SECRET in environment');
 }
 
-// Utility: Generate Token
+// ✅ Updated: Include membership_type in token
 const generateToken = (user) =>
-  jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '1d' });
+  jwt.sign(
+    {
+      id: user.id,
+      role: user.role,
+      membership_type: user.membership_type,
+    },
+    JWT_SECRET,
+    { expiresIn: '1d' }
+  );
 
 // POST /api/auth/register
 export const registerUser = async (req, res) => {
@@ -20,7 +28,10 @@ export const registerUser = async (req, res) => {
   }
 
   try {
-    const { rows: existingUsers } = await pool.query(`SELECT id FROM users WHERE email = $1`, [email]);
+    const { rows: existingUsers } = await pool.query(
+      `SELECT id FROM users WHERE email = $1`,
+      [email]
+    );
     if (existingUsers.length > 0) {
       return res.status(400).json({ error: 'Email already registered' });
     }
@@ -54,12 +65,21 @@ export const loginUser = async (req, res) => {
     }
 
     const user = rows[0];
+
+    // ❌ Reject users who are not yet accepted
+    if (user.status !== 'accepted') {
+      return res.status(403).json({
+        error: 'Your membership is still pending or was declined. Please wait for approval.',
+      });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password_hash);
 
     if (!isMatch) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
+    // ✅ Generate token with membership_type
     const token = generateToken(user);
 
     res.json({
@@ -72,7 +92,7 @@ export const loginUser = async (req, res) => {
         role: user.role,
         membership_type: user.membership_type,
         status: user.status,
-        motivation: user.motivation, // 👈 This stays
+        motivation: user.motivation,
       },
     });
   } catch (err) {
@@ -120,9 +140,7 @@ export const getPendingUsers = async (req, res) => {
   }
 };
 
-
-// PATCH /api/users/:id/status 
-// Update user status based on ID and status value
+// PATCH /api/users/:id/status
 export const updateUserStatus = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
@@ -145,5 +163,28 @@ export const updateUserStatus = async (req, res) => {
   } catch (err) {
     console.error('Update user status error:', err);
     res.status(500).json({ error: 'Could not update user status' });
+  }
+};
+
+
+// DELETE /api/users/:id
+export const deleteUserById = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // First delete any linked player profile
+    await pool.query(`DELETE FROM player_profiles WHERE user_id = $1`, [id]);
+
+    // Then delete the user
+    const { rowCount } = await pool.query(`DELETE FROM users WHERE id = $1`, [id]);
+
+    if (rowCount === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({ message: 'User and associated profile deleted' });
+  } catch (err) {
+    console.error('Delete user error:', err);
+    res.status(500).json({ error: 'Could not delete user' });
   }
 };

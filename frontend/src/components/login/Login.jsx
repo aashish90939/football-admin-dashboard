@@ -3,8 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 
 import { toast } from "react-toastify";
 
-import { useAuth } from "../context/AuthContext";
-
 const Login = () => {
   const [email, setEmail] = useState(""); // state for email
   const [password, setPassword] = useState(""); // state for password

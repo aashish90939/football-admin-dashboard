@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -8,26 +10,85 @@ const Contact = () => {
     reason: "",
     message: "",
   });
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!formData.phoneNumber) {
-      alert("Phone number is required!");
+      toast.error("Phone number is required!");
       return;
     }
-    console.log("Form submitted:", formData);
-    setFormData({
-      name: "",
-      email: "",
-      phoneNumber: "",
-      reason: "",
-      message: "",
-    });
+
+    if (!formData.reason) {
+      toast.error("Reason for contact is required!");
+      return;
+    }
+
+    if (!formData.message) {
+      toast.error("Message is required!");
+      return;
+    }
+
+    if (!formData.name) {
+      toast.error("Name is required!");
+      return;
+    }
+
+    if (!formData.email) {
+      toast.error("Email is required!");
+      return;
+    }
+
+    if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      toast.error("Please enter a valid email address!");
+      return;
+    }
+
+    if (!/^\d{10,15}$/.test(formData.phoneNumber)) {
+      toast.error("Please enter a valid phone number (10-15 digits)!");
+      return;
+    }
+
+    if (!formData.reason.trim()) {
+      toast.error("Reason for contact cannot be empty!");
+      return;
+    }
+
+    if (!formData.message.trim()) {
+      toast.error("Message cannot be empty!");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await axios.post("/api/contact-responses", {
+        name: formData.name,
+        email: formData.email,
+        phone_number: formData.phoneNumber,
+        reason: formData.reason,
+        message: formData.message,
+      });
+      toast.success("Message sent successfully!");
+
+      setFormData({
+        name: "",
+        email: "",
+        phoneNumber: "",
+        reason: "",
+        message: "",
+      });
+    } catch (err) {
+      console.error("Error submitting form:", err);
+      alert("Failed to send message.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -39,7 +100,7 @@ const Contact = () => {
         backgroundPosition: "center",
       }}
     >
-      {/* Form Side */}
+      {/* Form Section */}
       <div className="w-full md:w-1/2 bg-[#0d1117]/95 flex items-center justify-center px-8 py-12">
         <div className="w-full max-w-lg">
           <div className="flex flex-col items-center mb-8">
@@ -94,15 +155,18 @@ const Contact = () => {
 
             <button
               type="submit"
-              className="w-full bg-yellow-400 hover:bg-yellow-300 text-blue-900 font-bold py-3 rounded-lg transition duration-200 shadow-md"
+              disabled={loading}
+              className={`w-full ${
+                loading ? "bg-yellow-200" : "bg-yellow-400 hover:bg-yellow-300"
+              } text-blue-900 font-bold py-3 rounded-lg transition duration-200 shadow-md`}
             >
-              Send Message
+              {loading ? "Sending..." : "Send Message"}
             </button>
           </form>
         </div>
       </div>
 
-      {/* Contact Info & Map */}
+      {/* Info Section */}
       <div className="w-full md:w-1/2 bg-[#111827]/90 text-white px-8 py-12">
         <div className="max-w-xl mx-auto space-y-6">
           <div>
@@ -133,10 +197,10 @@ const Contact = () => {
             <h4 className="text-lg font-semibold mb-2">Follow Us</h4>
             <div className="flex gap-4">
               {[
-                ["facebook", "https://facebook.com"],
-                ["instagram", "https://instagram.com"],
-                ["twitter", "https://twitter.com"],
-              ].map(([platform, url]) => (
+                ["facebook", "https://facebook.com", "facebook.svg"],
+                ["instagram", "https://instagram.com", "instagram.svg"],
+                ["twitter", "https://twitter.com", "x-twitter.svg"],
+              ].map(([platform, url, icon]) => (
                 <a
                   key={platform}
                   href={url}
@@ -145,7 +209,7 @@ const Contact = () => {
                   className="hover:opacity-80 transition"
                 >
                   <img
-                    src={`src/assets/${platform}.svg`}
+                    src={`src/assets/${icon}`}
                     alt={platform}
                     className="w-6 h-6"
                   />

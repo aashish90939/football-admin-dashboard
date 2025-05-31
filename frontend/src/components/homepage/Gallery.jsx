@@ -2,34 +2,50 @@ import React from "react";
 
 const images = [
   {
-    src: "src/assets/gallery1.jpg",
-    alt: "Celebration after NRNA Cup win",
-    caption: "NRNA Cup Victory 2023",
-  },
-  {
-    src: "src/assets/gallery2.jpg",
+    src: "src/assets/Gallery/traininggallery.jpg",
     alt: "Training session",
     caption: "Training Day Vibes",
   },
   {
-    src: "src/assets/gallery3.jpg",
-    alt: "Team huddle before the game",
-    caption: "Pre-Match Unity",
+    src: "src/assets/Gallery/OurCricketTeam.jpg",
+    alt: "Cricket team photo",
+    caption: "Our Cricket Team",
   },
   {
-    src: "src/assets/gallery4.jpg",
-    alt: "Fans cheering the team",
-    caption: "Supporters’ Energy",
+    src: "src/assets/Gallery/FirstEverTrophyWin.jpg",
+    alt: "First ever trophy ",
+    caption: "First ever trophy ,came 3rd in NRNA Cup",
   },
   {
-    src: "src/assets/gallery5.jpg",
+    src: "src/assets/Gallery/FlexingAwayjersey.jpg",
+    alt: "Flexing away jersey",
+    caption: "Flexing Away Jersey",
+  },
+  {
+    src: "src/assets/Gallery/TeamDinner.jpg",
     alt: "Award ceremony",
-    caption: "Celebrating Excellence",
+    caption: "Team Dinner",
   },
   {
-    src: "src/assets/gallery6.jpg",
+    src: "src/assets/Gallery/celebrationAfterNRNAWin.jpg",
+    alt: "Celebration after NRNA Cup win",
+    caption: "NRNA Cup Victory 2023",
+  },
+  {
+    src: "src/assets/Gallery/Belgium Squad.jpg",
     alt: "International match moment",
     caption: "Belgium Gold Cup 2023",
+  },
+  {
+    src: "src/assets/Gallery/HochschuleCupMemories.jpg",
+    alt: "hochsschule cup memories",
+    caption: "Hochsschule Cup Memories",
+  },
+
+  {
+    src: "src/assets/Gallery/BpnDai.jpg",
+    alt: "Sponsored Second Jersey",
+    caption: "Sponsored Second Jersey",
   },
 ];
 
