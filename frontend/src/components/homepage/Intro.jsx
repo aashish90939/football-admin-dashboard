@@ -77,9 +77,7 @@ const Intro = () => {
       </div>
 
       {/* Achievements Section */}
-      <div className="mt-24">
-        <Achievements />
-      </div>
+      <div className="mt-24"></div>
     </section>
   );
 };

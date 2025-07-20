@@ -5,7 +5,6 @@ export const createPlayerProfile = async (req, res) => {
   try {
     const user_id = req.user.id;
 
-    // Expecting 'player' role in token
     if (req.user.membership_type !== 'player') {
       return res.status(403).json({ error: 'Only players can create profiles' });
     }
@@ -80,10 +79,11 @@ export const getProfilePhoto = async (req, res) => {
   }
 };
 
-// Update profile
+// ✅ Update profile by ID and user authorization
 export const updatePlayerProfile = async (req, res) => {
   try {
     const user_id = req.user.id;
+    const profileId = req.params.id;
     const { jersey_number, position, sub_role } = req.body;
 
     const fields = [];
@@ -94,14 +94,17 @@ export const updatePlayerProfile = async (req, res) => {
       fields.push(`jersey_number = $${idx++}`);
       values.push(jersey_number);
     }
+
     if (position) {
       fields.push(`position = $${idx++}`);
       values.push(position);
     }
+
     if (sub_role !== undefined) {
       fields.push(`sub_role = $${idx++}`);
       values.push(sub_role);
     }
+
     if (req.file) {
       fields.push(`photo = $${idx++}`);
       values.push(req.file.buffer);
@@ -111,18 +114,19 @@ export const updatePlayerProfile = async (req, res) => {
       return res.status(400).json({ error: 'No fields to update' });
     }
 
-    values.push(user_id); // for WHERE clause
+    values.push(profileId); // WHERE id = $n
+    values.push(user_id);   // AND user_id = $n+1
 
     const query = `
       UPDATE player_profiles
       SET ${fields.join(', ')}
-      WHERE user_id = $${values.length}
+      WHERE id = $${values.length - 1} AND user_id = $${values.length}
       RETURNING *`;
 
     const { rows } = await pool.query(query, values);
 
     if (rows.length === 0) {
-      return res.status(404).json({ error: 'Profile not found' });
+      return res.status(404).json({ error: 'Profile not found or unauthorized' });
     }
 
     res.json({ profile: rows[0] });
@@ -153,8 +157,7 @@ export const deletePlayerProfile = async (req, res) => {
   }
 };
 
-
-// GET /api/users/:id/full-profile
+// Admin: Get all full profiles
 export const getFullUserProfiles = async (req, res) => {
   try {
     const { rows } = await pool.query(
@@ -171,5 +174,67 @@ export const getFullUserProfiles = async (req, res) => {
   } catch (err) {
     console.error('Fetch full profiles error:', err);
     res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+
+// PATCH /api/users/:id   
+// Update user details (role, membership_type, jersey_number, position)
+export const updateUserDetails = async (req, res) => {
+  const { id } = req.params;
+  const { role, membership_type, jersey_number, position } = req.body;
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    // ✅ Update users table
+    const userFields = [];
+    const userValues = [];
+    let idx = 1;
+
+    if (role) {
+      userFields.push(`role = $${idx++}`);
+      userValues.push(role);
+    }
+    if (membership_type) {
+      userFields.push(`membership_type = $${idx++}`);
+      userValues.push(membership_type);
+    }
+
+    if (userFields.length > 0) {
+      userValues.push(id);
+      const userQuery = `UPDATE users SET ${userFields.join(', ')} WHERE id = $${userValues.length}`;
+      await client.query(userQuery, userValues);
+    }
+
+    // ✅ Update player_profiles table
+    const profileFields = [];
+    const profileValues = [];
+    let i = 1;
+
+    if (jersey_number) {
+      profileFields.push(`jersey_number = $${i++}`);
+      profileValues.push(jersey_number);
+    }
+    if (position) {
+      profileFields.push(`position = $${i++}`);
+      profileValues.push(position);
+    }
+
+    if (profileFields.length > 0) {
+      profileValues.push(id);
+      const profileQuery = `UPDATE player_profiles SET ${profileFields.join(', ')} WHERE user_id = $${profileValues.length}`;
+      await client.query(profileQuery, profileValues);
+    }
+
+    await client.query("COMMIT");
+    res.json({ message: "User updated successfully" });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error("Error updating user:", err);
+    res.status(500).json({ error: "Could not update user" });
+  } finally {
+    client.release();
   }
 };

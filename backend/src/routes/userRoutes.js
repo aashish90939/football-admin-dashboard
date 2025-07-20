@@ -4,7 +4,13 @@ import { getUsers ,deleteUserById} from '../controllers/userController.js';
 import { updateUserStatus } from '../controllers/userController.js';
 
 
+
 import { getFullUserProfiles } from '../controllers/playerProfileController.js'; // Import the new controller function
+import authMiddleware from '../middleware/authMiddleware.js';
+import requireAdmin from '../middleware/requireAdmin.js';
+import { updateUserDetails } from '../controllers/playerProfileController.js';
+
+
 
 const router = express.Router();
 
@@ -22,6 +28,8 @@ router.patch('/:id/status', updateUserStatus);  // // Update user status based o
 router.get("/full-profiles", getFullUserProfiles); // ✅ add this
 
 router.delete('/:id', deleteUserById);
+
+router.patch('/:id', authMiddleware, requireAdmin, updateUserDetails); // ✅ Update user details by ID
 
 
 

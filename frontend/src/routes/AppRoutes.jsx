@@ -20,6 +20,7 @@ import TrainingSchedule from "../components/playerdashboard/GeneralSidebarFuncti
 import AttendanceRecord from "../components/playerdashboard/GeneralSidebarFunctions/AttendanceRecord";
 
 import AdminDashboard from "../components/playerdashboard/AdminDashboard/AdminDashboard";
+import Achievements from "../components/homepage/Achievements";
 
 const router = createBrowserRouter([
   {
@@ -33,6 +34,7 @@ const router = createBrowserRouter([
       { path: "/team", element: <Team /> },
       { path: "/gallery", element: <Gallery /> },
       { path: "/contact", element: <Contact /> },
+      { path: "/achievements", element: <Achievements /> }, // ✅ Protected route
     ],
   },
   {

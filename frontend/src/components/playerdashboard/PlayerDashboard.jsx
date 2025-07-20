@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import {
@@ -14,21 +14,13 @@ import { MdOutlineWhatsapp } from "react-icons/md";
 import LatestNews from "./NewsEventSection/LatestNews";
 import UpcomingEvents from "./NewsEventSection/UpcomingEvents";
 
-// Importing useLocation to access the current route
-import { useLocation } from "react-router-dom";
-
 const PlayerDashboard = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [showRightPanel, setShowRightPanel] = useState(true); // ✅ Replaced context with local state
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
-
-  // Importing useLocation to access the current route
   const location = useLocation();
-  const hideRightPanelRoutes = ["/dashboard/admin"]; // Define routes where the right panel should be hidden
-  const shouldHideRightPanel = hideRightPanelRoutes.some((path) =>
-    location.pathname.startsWith(path)
-  );
+
+  const isAdminRoute = location.pathname.startsWith("/dashboard/admin");
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -43,13 +35,16 @@ const PlayerDashboard = ({ children }) => {
     if (window.location.pathname === "/dashboard") {
       navigate("profile");
     }
-  }, [navigate]);
+    if (window.innerWidth < 1024) {
+      setIsSidebarOpen(false);
+    }
+  }, [location.pathname, navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     localStorage.removeItem("authToken");
-    toast.success("User logged out !");
+    toast.success("User logged out!");
     navigate("/login");
   };
 
@@ -74,21 +69,40 @@ const PlayerDashboard = ({ children }) => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Mobile sidebar toggle */}
-      <div className="lg:hidden flex justify-between px-4 py-2 bg-white shadow z-50">
-        <button
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="bg-blue-50 p-2 rounded-md shadow"
-        >
-          <FaBars className="text-blue-700" />
-        </button>
-      </div>
+    <div className="min-h-screen flex flex-col">
+      {/* Mobile Top Bar */}
+      {!isAdminRoute && (
+        <div className="lg:hidden flex justify-between items-center px-4 py-2 bg-white shadow z-50">
+          <button
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="bg-blue-50 p-2 rounded-md shadow"
+          >
+            <FaBars className="text-blue-700" />
+          </button>
+          <p className="text-gray-700 font-semibold">
+            Welcome, {user?.name?.split(" ")[0] || "Player"}
+          </p>
+        </div>
+      )}
 
-      <div className="flex flex-1 bg-gradient-to-br from-gray-100 to-blue-50 overflow-hidden">
-        {isSidebarOpen && (
-          <aside className="w-64 bg-white shadow-lg hidden lg:flex flex-col justify-between">
-            <div>
+      <div className="flex flex-1 relative bg-gradient-to-br from-gray-100 to-blue-50">
+        {/* Sidebar Overlay on Mobile */}
+        {!isAdminRoute && isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-40 z-30 lg:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          ></div>
+        )}
+
+        {/* Sidebar */}
+        {!isAdminRoute && (
+          <aside
+            className={`w-64 bg-white shadow-lg z-40 transform top-0 left-0 h-full transition-transform duration-300
+            fixed flex flex-col
+            ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
+            lg:relative lg:translate-x-0 lg:flex lg:static`}
+          >
+            <div className="flex-1">
               <div className="px-6 py-5 border-b">
                 <p className="text-md text-gray-500 mt-1">
                   Welcome, {user?.name?.split(" ")[0] || "Player"}
@@ -114,6 +128,14 @@ const PlayerDashboard = ({ children }) => {
                   ))}
                 </ul>
               </nav>
+              <div className="px-4 py-4 border-t">
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center justify-center gap-2 bg-red-500 text-white font-semibold py-2 rounded-lg hover:bg-red-600 transition"
+                >
+                  <FaSignOutAlt /> Logout
+                </button>
+              </div>
 
               <div className="mt-8 border-t pt-4 px-4 space-y-3">
                 <div>
@@ -142,27 +164,19 @@ const PlayerDashboard = ({ children }) => {
           </aside>
         )}
 
-        <main className="flex-1 flex gap-6 p-4 md:p-6 lg:p-10 overflow-y-auto">
+        {/* Main Content */}
+        <main className="flex-1 flex flex-col lg:flex-row gap-6 p-4 md:p-6 lg:p-10 overflow-y-auto">
           <div
-            className={`flex-1 ${
-              showRightPanel ? "" : "w-full"
-            } transition-all`}
+            className={`flex-1 ${!isAdminRoute ? "" : "w-full"} transition-all`}
           >
             <div className="bg-white p-6 rounded-xl shadow-md min-h-[400px]">
               {children || <Outlet />}
             </div>
           </div>
 
-          {showRightPanel && !shouldHideRightPanel && (
+          {/* Right Panel */}
+          {!isAdminRoute && (
             <div className="w-[300px] hidden xl:block space-y-6">
-              <div className="px-4 py-4 border-t">
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center justify-center gap-2 bg-red-500 text-white font-semibold py-2 rounded-lg hover:bg-red-600 transition"
-                >
-                  <FaSignOutAlt /> Logout
-                </button>
-              </div>
               <UpcomingEvents />
               <LatestNews />
             </div>

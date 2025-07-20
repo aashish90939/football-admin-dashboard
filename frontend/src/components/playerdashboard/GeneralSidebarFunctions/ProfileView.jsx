@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from "react";
 import PlayerProfileModal from "./PlayerProfileModal";
+import { usePlayers } from "../../../context/PlayersContext";
 
 const ProfileView = () => {
   const storedUser = localStorage.getItem("user");
   const user = storedUser ? JSON.parse(storedUser) : null;
+
+  const { enrichedPlayers, loading } = usePlayers();
+
   const [profile, setProfile] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   const [formData, setFormData] = useState({
     jersey_number: "",
@@ -13,20 +18,15 @@ const ProfileView = () => {
     sub_role: "",
     photo: null,
   });
+
   const [photoPreview, setPhotoPreview] = useState(null);
   const token = localStorage.getItem("authToken");
 
-  const fetchPlayerProfile = async () => {
-    try {
-      const res = await fetch(`/api/player_profiles/${user.id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setProfile(data);
-      }
-    } catch (err) {
-      console.error("Failed to fetch profile:", err);
-    }
-  };
+  useEffect(() => {
+    if (!user || !enrichedPlayers?.length) return;
+    const enrichedProfile = enrichedPlayers.find((p) => p.user_id === user.id);
+    if (enrichedProfile) setProfile(enrichedProfile);
+  }, [enrichedPlayers, user]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -41,11 +41,18 @@ const ProfileView = () => {
     form.append("jersey_number", formData.jersey_number);
     form.append("position", formData.position);
     if (formData.sub_role) form.append("sub_role", formData.sub_role);
-    form.append("photo", formData.photo);
+    if (formData.photo) form.append("photo", formData.photo);
+
+    const url =
+      profile && isEditMode
+        ? `/api/player_profiles/${profile.id}`
+        : `/api/player_profiles`;
+
+    const method = profile && isEditMode ? "PUT" : "POST";
 
     try {
-      const res = await fetch("/api/player_profiles", {
-        method: "POST",
+      const res = await fetch(url, {
+        method,
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -55,9 +62,10 @@ const ProfileView = () => {
       const contentType = res.headers.get("content-type");
 
       if (res.ok) {
-        const created = await res.json();
-        setProfile(created.profile);
+        const data = await res.json();
+        setProfile(data.profile || data);
         setModalOpen(false);
+        setIsEditMode(false);
       } else if (contentType?.includes("application/json")) {
         const error = await res.json();
         alert(error.error || "Failed to save profile.");
@@ -66,42 +74,40 @@ const ProfileView = () => {
         alert(errorText || "Unexpected error from server.");
       }
     } catch (err) {
-      console.error("Error creating profile:", err);
+      console.error("Error saving profile:", err);
       alert("Something went wrong. Please try again.");
     }
   };
-
-  useEffect(() => {
-    if (user?.membership_type === "player" && !profile) {
-      fetchPlayerProfile();
-    }
-  }, [user, profile]);
 
   if (!user) {
     return <div className="p-6 text-red-600">Please log in first.</div>;
   }
 
+  if (loading) {
+    return <div className="p-6 text-gray-500">Loading player profile...</div>;
+  }
+
   return (
-    <div className="p-6 max-w-2xl mx-auto font-sans">
-      <h1 className="text-3xl font-bold mb-6 text-blue-700">
+    <div className="p-4 sm:p-6 max-w-3xl mx-auto font-sans">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-blue-700 text-center">
         👤 Membership Profile
       </h1>
 
-      <div className="bg-white shadow-lg rounded-lg p-6 flex items-center space-x-6">
+      <div className="bg-white shadow-lg rounded-lg p-6 flex flex-col sm:flex-row sm:items-center gap-6">
         {profile?.photo_base64 ? (
           <img
             src={`data:image/jpeg;base64,${profile.photo_base64}`}
             alt={user.name}
-            className="w-32 h-32 rounded-full object-cover border-4 border-blue-500 shadow"
+            className="w-28 h-28 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-blue-500 shadow mx-auto sm:mx-0"
           />
         ) : (
           <img
             src="/assets/default-user.png"
             alt="Default"
-            className="w-32 h-32 rounded-full object-cover border-4 border-gray-300 shadow"
+            className="w-28 h-28 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-gray-300 shadow mx-auto sm:mx-0"
           />
         )}
-        <div>
+        <div className="text-center sm:text-left">
           <p className="text-lg font-semibold text-gray-700">
             Name: {user.name}
           </p>
@@ -117,8 +123,10 @@ const ProfileView = () => {
       {user.membership_type === "player" && (
         <div className="mt-6">
           {profile ? (
-            <div className="bg-gray-100 p-4 rounded">
-              <h2 className="text-xl font-semibold mb-2">Player Details</h2>
+            <div className="bg-gray-100 p-4 rounded shadow-sm">
+              <h2 className="text-xl font-semibold mb-2 text-center sm:text-left">
+                Player Details
+              </h2>
               <p>
                 <strong>Jersey:</strong> {profile.jersey_number}
               </p>
@@ -130,26 +138,50 @@ const ProfileView = () => {
                   <strong>Sub-role:</strong> {profile.sub_role}
                 </p>
               )}
+
+              <div className="flex justify-center sm:justify-start">
+                <button
+                  onClick={() => {
+                    setFormData({
+                      jersey_number: profile.jersey_number,
+                      position: profile.position,
+                      sub_role: profile.sub_role || "",
+                      photo: null,
+                    });
+                    setIsEditMode(true);
+                    setModalOpen(true);
+                  }}
+                  className="mt-4 px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700"
+                >
+                  ✏️ Edit Player Profile
+                </button>
+              </div>
             </div>
           ) : (
-            <button
-              onClick={() => setModalOpen(true)}
-              className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-            >
-              + Create Player Profile
-            </button>
+            <div className="flex justify-center">
+              <button
+                onClick={() => setModalOpen(true)}
+                className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+              >
+                + Create Player Profile
+              </button>
+            </div>
           )}
         </div>
       )}
 
       <PlayerProfileModal
         open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={() => {
+          setModalOpen(false);
+          setIsEditMode(false);
+        }}
         onSubmit={handleSubmit}
         formData={formData}
         setFormData={setFormData}
         photoPreview={photoPreview}
         setPhotoPreview={setPhotoPreview}
+        isEditMode={isEditMode}
       />
     </div>
   );

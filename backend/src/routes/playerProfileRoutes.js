@@ -3,7 +3,6 @@ import upload from '../middleware/upload.js';
 import authMiddleware from '../middleware/authMiddleware.js';
 import requirePlayer from '../middleware/requirePlayer.js';
 
-
 import {
   createPlayerProfile,
   getPlayerProfile,
@@ -15,16 +14,20 @@ import {
 
 const router = express.Router();
 
+// Create new profile
 router.post('/', authMiddleware, requirePlayer, upload.single('photo'), createPlayerProfile);
-router.patch('/', authMiddleware, requirePlayer, upload.single('photo'), updatePlayerProfile);
+
+// ✅ Update profile by ID
+router.put('/:id', authMiddleware, requirePlayer, upload.single('photo'), updatePlayerProfile);
+
+// Delete profile
 router.delete('/', authMiddleware, requirePlayer, deletePlayerProfile);
 
+// Get individual profile or photo
 router.get('/:userId', getPlayerProfile);
 router.get('/:userId/photo', getProfilePhoto);
 
+// Admin-only: get all user profiles with photo in base64
 router.get('/:id/full-profile', authMiddleware, getFullUserProfiles);
-
-
-
 
 export default router;

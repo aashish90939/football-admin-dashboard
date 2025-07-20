@@ -8,6 +8,7 @@ const PlayerProfileModal = ({
   setFormData,
   photoPreview,
   setPhotoPreview,
+  isEditMode,
 }) => {
   if (!open) return null;
 
@@ -22,7 +23,7 @@ const PlayerProfileModal = ({
         </button>
 
         <h2 className="text-2xl font-bold mb-6 text-center text-blue-700">
-          📝 Create Player Profile
+          {isEditMode ? "✏️ Edit Player Profile" : "📝 Create Player Profile"}
         </h2>
 
         <form onSubmit={onSubmit} className="space-y-4">
@@ -106,7 +107,7 @@ const PlayerProfileModal = ({
               type="submit"
               className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg"
             >
-              Save Profile
+              {isEditMode ? "Update Profile" : "Save Profile"}
             </button>
           </div>
         </form>

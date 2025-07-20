@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { Facebook, Instagram, Youtube } from "lucide-react"; // Or use react-icons instead
 
 const Contact = () => {
   const [formData, setFormData] = useState({

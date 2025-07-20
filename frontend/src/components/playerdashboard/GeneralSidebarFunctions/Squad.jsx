@@ -46,7 +46,7 @@ const Squad = () => {
                 </h4>
                 <p className="text-sm text-gray-600">
                   #{player.jersey_number}{" "}
-                  {player.sub_role && ` - ${player.sub_role}`}
+                  <span>{player.sub_role && ` - ${player.sub_role}`}</span>
                 </p>
               </div>
             </div>
