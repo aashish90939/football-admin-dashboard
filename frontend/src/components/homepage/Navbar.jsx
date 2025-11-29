@@ -43,7 +43,8 @@ const Navbar = () => {
             className="h-14 w-14 rounded-full border-4 border-yellow-400 shadow-lg"
           />
           <span className="text-3xl font-extrabold tracking-wide text-yellow-300">
-            Nepalese Stars NRW
+            Nepalese Stars NRW{" "}
+            <span className="text-yellow-300 text-lg">e.v</span>
           </span>
         </Link>
 

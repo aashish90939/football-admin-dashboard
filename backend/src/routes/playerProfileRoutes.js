@@ -17,7 +17,7 @@ const router = express.Router();
 // Create new profile
 router.post('/', authMiddleware, requirePlayer, upload.single('photo'), createPlayerProfile);
 
-// ✅ Update profile by ID
+// Update existing profile
 router.put('/:id', authMiddleware, requirePlayer, upload.single('photo'), updatePlayerProfile);
 
 // Delete profile

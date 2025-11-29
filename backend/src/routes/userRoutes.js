@@ -25,11 +25,10 @@ router.get('/pending', getPendingUsers);
 //for admin dashboard
 router.patch('/:id/status', updateUserStatus);  // // Update user status based on ID and status value
 
-router.get("/full-profiles", getFullUserProfiles); // ✅ add this
-
+router.get("/full-profiles", getFullUserProfiles); // Get full user profiles
 router.delete('/:id', deleteUserById);
 
-router.patch('/:id', authMiddleware, requireAdmin, updateUserDetails); // ✅ Update user details by ID
+router.patch('/:id', authMiddleware, requireAdmin, updateUserDetails); // // Update user details by ID, requires admin authentication
 
 
 

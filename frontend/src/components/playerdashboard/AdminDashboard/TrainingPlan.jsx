@@ -27,9 +27,7 @@ const TrainingPlan = () => {
 
   return (
     <div className="p-6 max-w-4xl mx-auto bg-white shadow-lg rounded-xl space-y-8">
-      <h2 className="text-3xl font-bold text-gray-800">
-        ⚽ Admin Training Plan
-      </h2>
+      <h2 className="text-3xl font-bold text-gray-800">Training Plan</h2>
 
       {/* Form */}
       <div className="grid md:grid-cols-2 gap-6">
